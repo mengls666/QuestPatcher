@@ -15,6 +15,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Tar;
 using Serilog;
+using System.Security.Cryptography;
 
 namespace QuestPatcher.Core
 {
@@ -102,7 +103,7 @@ namespace QuestPatcher.Core
         /// <summary>
         /// Index for file downloads. Used by default, but if it fails QP will fallback to resources
         /// </summary>
-        private const string DownloadsUrl = "https://raw.githubusercontent.com/Lauriethefish/QuestPatcher/main/QuestPatcher.Core/Resources/file-downloads.json";
+        private const string DownloadsUrl = "https://raw.githubusercontent.com/timfenton/QuestPatcher/1780e13a0aaa77c9ba05e05e7ec5a2776afd5b1c/QuestPatcher.Core/Resources/file-downloads.json";
 
         private readonly Dictionary<ExternalFileType, FileInfo> _fileTypes = new()
         {
@@ -545,10 +546,14 @@ namespace QuestPatcher.Core
                 saveLocation = Path.Combine(extractLocation, fileInfo.SaveName.Value);
             }
 
-            if (!_fullyDownloaded.Contains(fileType) || !File.Exists(saveLocation))
+            // always redownload libmodloader64 to make sure its the right one
+            if (!_fullyDownloaded.Contains(fileType) || !File.Exists(saveLocation) || saveLocation.Contains("libmodloader64", StringComparison.InvariantCultureIgnoreCase))
             {
                 await DownloadFileWithMirrors(fileType, fileInfo, (await PrepareDownloadUrls())[fileType], saveLocation);
             }
+
+            byte[] hash = MD5.HashData(File.ReadAllBytes(saveLocation));
+            Log.Information($"File {saveLocation} has hash: {hash} ");
 
             return saveLocation;
         }
