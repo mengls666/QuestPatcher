@@ -12,7 +12,6 @@ using ReactiveUI;
 using Serilog;
 using JetBrains.Annotations;
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace QuestPatcher.ViewModels
 {
